@@ -26,7 +26,7 @@ FFError FFStream_createCodec ( FFStream* this )
     if ( this->codec ) {
         return EASYFF_NOERROR;
     }
-    AVCodec* type = avcodec_find_decoder( this->stream->codecpar->codec_type );
+    AVCodec* type = avcodec_find_decoder( this->stream->codecpar->codec_id );
     NULL_GUARD(type) EASYFF_ERROR_NO_CODEC;
 
     this->codec = avcodec_alloc_context3( type );
@@ -53,7 +53,9 @@ FFStream* FFStream_newForRead ( AVStream* avstream )
     FFStream* this = malloc( sizeof(FFStream) );
     NULL_GUARD(this) NULL;
 
+    this->error  = 0;
     this->stream = avstream;
+    this->codec  = NULL;
 
     FFError ret = FFStream_createCodec( this );
     if ( ret != EASYFF_NOERROR ) {
@@ -72,6 +74,12 @@ void FFStream_delete ( FFStream** this )
     }
     free( *this );
     *this = NULL;
+}
+
+FFError FFStream_checkError ( FFStream* this )
+{
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    return this->error;
 }
 
 int FFStream_getIndex ( FFStream* this )
@@ -95,6 +103,7 @@ FFError FFStream_sendPacket ( FFStream* this, AVPacket* packet )
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
     ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+    NULL_GUARD(this->codec) EASYFF_ERROR_NO_CODEC;
 
     if ( avcodec_send_packet( this->codec, packet ) ) {
         this->error = EASYFF_ERROR_PACKET_LOST;
@@ -106,5 +115,7 @@ char FFStream_receiveFrame ( FFStream* this, AVFrame* frame )
 {
     NULL_GUARD(this) 0;
     ILLEGAL_GUARD(this) 0;
+    NULL_GUARD(this->codec) EASYFF_ERROR_NO_CODEC;
+
     return !avcodec_receive_frame( this->codec, frame );
 }

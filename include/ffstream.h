@@ -15,6 +15,8 @@ typedef struct FFStream FFStream;
 FFStream* FFStream_newForRead ( AVStream* );
 void FFStream_delete ( FFStream** );
 
+FFError FFStream_checkError ( FFStream* );
+
 int FFStream_getIndex ( FFStream* );
 
 char FFStream_isVideo ( FFStream* );

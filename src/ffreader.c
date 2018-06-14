@@ -144,6 +144,9 @@ FFStream* FFReader_findAudioStream ( FFReader* this )
 
 char FFReader_decode ( FFReader* this, FFStream* stream )
 {
+    NULL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) 0;
+
     if ( FFStream_receiveFrame( stream, this->frame ) ) {
         return EASYFF_NOERROR;
     }

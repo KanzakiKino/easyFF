@@ -11,9 +11,10 @@ extern(C)
 {
     alias FFError = ubyte;
 
-    struct FFReader;
     struct FFStream;
+    FFError FFStream_checkError ( FFStream* );
 
+    struct FFReader;
     FFReader* FFReader_new                ( const(char)* );
     void      FFReader_delete             ( FFReader** );
     FFError   FFReader_checkError         ( FFReader* );
@@ -24,12 +25,17 @@ extern(C)
 
 void main ()
 {
-    FFReader* reader = FFReader_new( "/home/kinok/pics/test.mp4" );
+    FFReader* reader = FFReader_new( "/home/kinok/pics/test.bmp" );
     assert( reader );
 
     auto video = FFReader_findVideoStream( reader );
+    assert( video );
+    "VideoStream Status: %d".writefln( FFStream_checkError( video ) );
+
     while ( FFReader_decode( reader, video ) ) {
+        "hoge".writeln;
     }
+    "Reader Status: %d".writefln( FFReader_checkError( reader ) );
 
     FFReader_delete( &reader );
 }

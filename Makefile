@@ -21,7 +21,7 @@ $(OBJECT)/%.o: $(SOURCE)/%.c
 all: clean $(TARGET)
 
 test: $(TARGET)
-	rdmd -L-L./lib/ ./test.d
+	rdmd -L-L./lib/ --force ./test.d
 
 clean:
 	-rm -rf $(OBJECT) $(TARGET)
