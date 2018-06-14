@@ -13,5 +13,6 @@ typedef unsigned char FFError;
 #define EASYFF_ERROR_STREAM         0x04
 #define EASYFF_ERROR_NO_CODEC       0x05
 #define EASYFF_ERROR_PACKET_LOST    0x06
+#define EASYFF_ERROR_INVALID_FRAME  0x07
 
 #endif

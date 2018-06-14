@@ -6,6 +6,7 @@
 
 #include "fferror.h"
 
+typedef struct FFImage  FFImage;
 typedef struct FFReader FFReader;
 typedef struct FFStream FFStream;
 
@@ -21,5 +22,12 @@ FFError FFReader_checkError ( FFReader* );
 FFStream* FFReader_findVideoStream ( FFReader* );
 // Finds audio stream and returns it.
 FFStream* FFReader_findAudioStream ( FFReader* );
+
+// Decodes the stream.
+char FFReader_decode ( FFReader*, FFStream* );
+
+// Converts the decoded frame to image.
+// You need to delete the image after using.
+FFImage* FFReader_convertFrameToImage ( FFReader* );
 
 #endif

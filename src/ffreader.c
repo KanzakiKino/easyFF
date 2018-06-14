@@ -3,6 +3,7 @@
 #define EASYFF_PROTECTED
 
 #include <ffreader.h>
+#include <ffimage.h>
 #include <ffstream.h>
 #include <util.h>
 
@@ -178,4 +179,11 @@ char FFReader_decode ( FFReader* this, FFStream* stream )
         return 0;
     }
     return FFStream_receiveFrame( stream, this->frame );
+}
+
+FFImage* FFReader_convertFrameToImage ( FFReader* this )
+{
+    NULL_GUARD(this) NULL;
+    ILLEGAL_GUARD(this) 0;
+    return FFImage_newFromAVFrame( this->frame );
 }
