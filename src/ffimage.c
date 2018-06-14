@@ -73,9 +73,9 @@ FFError FFImage_copyAVFrame ( FFImage* this, AVFrame* frame, int dstW, int dstH 
     uint8_t** srcData   = frame->data;
     int*      srcLs     = frame->linesize;
     uint8_t*  dstData[] = {this->buffer};
-    int       dstLs  [] = {dstW};
+    int       dstLs  [] = {dstW*FFIMAGE_BYTE_PER_PIX};
     sws_scale( sws, (const uint8_t* const*)srcData,
-            srcLs, 0, 0, dstData, dstLs );
+            srcLs, 0, dstH, dstData, dstLs );
     return EASYFF_NOERROR;
 }
 
