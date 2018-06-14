@@ -1,5 +1,7 @@
 // Written under LGPL-3.0 in the C language.
 // Copyright 2018 KanzakiKino
+#define EASYFF_PROTECTED
+
 #include <ffreader.h>
 #include <ffstream.h>
 #include <util.h>

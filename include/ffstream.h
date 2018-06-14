@@ -6,14 +6,19 @@
 
 #include "fferror.h"
 
-typedef struct AVFrame AVFrame;
-typedef struct AVPacket AVPacket;
-typedef struct AVStream AVStream;
-
 typedef struct FFStream FFStream;
 
-FFStream* FFStream_newForRead ( AVStream* );
-void FFStream_delete ( FFStream** );
+#ifdef EASYFF_PROTECTED
+    typedef struct AVFrame AVFrame;
+    typedef struct AVPacket AVPacket;
+    typedef struct AVStream AVStream;
+
+    FFStream* FFStream_newForRead ( AVStream* );
+    void FFStream_delete ( FFStream** );
+
+    FFError FFStream_sendPacket ( FFStream*, AVPacket* );
+    char FFStream_receiveFrame ( FFStream*, AVFrame* );
+#endif
 
 FFError FFStream_checkError ( FFStream* );
 
@@ -21,8 +26,5 @@ int FFStream_getIndex ( FFStream* );
 
 char FFStream_isVideo ( FFStream* );
 char FFStream_isAudio ( FFStream* );
-
-FFError FFStream_sendPacket ( FFStream*, AVPacket* );
-char FFStream_receiveFrame ( FFStream*, AVFrame* );
 
 #endif
