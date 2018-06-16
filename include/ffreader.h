@@ -5,6 +5,7 @@
 #define EASYFF_FFREADER_H
 
 #include "fferror.h"
+#include "ffmeta.h"
 
 typedef struct FFImage  FFImage;
 typedef struct FFReader FFReader;
@@ -25,6 +26,9 @@ FFStream* FFReader_getStream ( FFReader*, unsigned int );
 FFStream* FFReader_findVideoStream ( FFReader* );
 // Finds audio stream and returns it.
 FFStream* FFReader_findAudioStream ( FFReader* );
+
+// Generates FFMeta.
+FFMeta FFReader_getMeta ( FFReader* );
 
 // Decodes the stream.
 char FFReader_decode ( FFReader*, FFStream* );

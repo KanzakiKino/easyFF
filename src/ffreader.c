@@ -20,8 +20,8 @@ struct FFReader
 
     AVFormatContext* format;
 
-    size_t     streamCount;
-    FFStream** streams;
+    unsigned int streamCount;
+    FFStream**   streams;
 
     AVFrame* frame;
 };
@@ -155,6 +155,23 @@ FFStream* FFReader_findAudioStream ( FFReader* this )
         }
     }
     return NULL;
+}
+
+FFMeta FFReader_getMeta ( FFReader* this )
+{
+    FFMeta meta = FFMETA_INIT;
+    NULL_GUARD(this) meta;
+    ILLEGAL_GUARD(this) meta;
+
+    NULL_GUARD(this->format) meta;
+    NULL_GUARD(this->format->metadata) meta;
+
+    FFError ret = FFMeta_assignAVDic( &meta, this->format->metadata );
+    if ( ret != EASYFF_NOERROR ) {
+        this->error = ret;
+        return meta;
+    }
+    return meta;
 }
 
 char FFReader_decode ( FFReader* this, FFStream* stream )
