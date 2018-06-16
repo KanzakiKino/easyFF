@@ -17,6 +17,7 @@ typedef struct FFImage FFImage;
 
 void FFImage_delete ( FFImage** );
 
+long           FFImage_getPts    ( FFImage* );
 int            FFImage_getWidth  ( FFImage* );
 int            FFImage_getHeight ( FFImage* );
 unsigned char* FFImage_getBuffer ( FFImage* );

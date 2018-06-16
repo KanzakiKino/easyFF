@@ -17,6 +17,7 @@ void FFSound_delete ( FFSound** );
 
 FFError FFSound_checkError ( FFSound* );
 
+long   FFSound_getPts        ( FFSound* );
 int    FFSound_getSamples    ( FFSound* );
 int    FFSound_getChannels   ( FFSound* );
 int    FFSound_getSampleRate ( FFSound* );

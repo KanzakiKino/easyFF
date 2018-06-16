@@ -16,6 +16,8 @@ struct FFSound
 {
     FFError error;
 
+    long pts;
+
     int    samples;
     int    channels;
     int    sampleRate;
@@ -75,6 +77,7 @@ FFError FFSound_copyAVFrame ( FFSound* this, AVFrame* frame )
         this->error = EASYFF_ERROR_INVALID_FRAME;
         return EASYFF_ERROR_INVALID_FRAME;
     }
+    this->pts        = frame->pts;
     this->sampleRate = srcSampleRate;
 
     swr_free( &swr );
@@ -87,6 +90,7 @@ FFSound* FFSound_newFromAVFrame ( AVFrame* frame )
 
     FFSound* this = malloc( sizeof(FFSound) );
     this->error      = EASYFF_NOERROR;
+    this->pts        = 0;
     this->samples    = 0;
     this->channels   = 0;
     this->sampleRate = 0;
@@ -114,6 +118,12 @@ FFError FFSound_checkError ( FFSound* this )
     return this->error;
 }
 
+long FFSound_getPts ( FFSound* this )
+{
+    NULL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) 0;
+    return this->pts;
+}
 int FFSound_getSamples ( FFSound* this )
 {
     NULL_GUARD(this) 0;

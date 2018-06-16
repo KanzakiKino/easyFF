@@ -14,6 +14,8 @@ struct FFImage
 {
     FFError error;
 
+    long pts;
+
     int width, height;
     uint8_t* buffer;
 };
@@ -76,6 +78,7 @@ FFError FFImage_copyAVFrame ( FFImage* this, AVFrame* frame, int dstW, int dstH 
     int       dstLs  [] = {dstW*FFIMAGE_BYTE_PER_PIX};
     sws_scale( sws, (const uint8_t* const*)srcData,
             srcLs, 0, dstH, dstData, dstLs );
+    this->pts = frame->pts;
 
     sws_freeContext( sws );
     return EASYFF_NOERROR;
@@ -90,6 +93,7 @@ FFImage* FFImage_newFromAVFrame ( AVFrame* frame )
 
     FFImage* this = malloc( sizeof(FFImage) );
     this->error  = EASYFF_NOERROR;
+    this->pts    = 0;
     this->width  = 0;
     this->height = 0;
     this->buffer = NULL;
@@ -118,18 +122,28 @@ FFError FFImage_checkError ( FFImage* this )
     return this->error;
 }
 
+long FFImage_getPts ( FFImage* this )
+{
+    NULL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) 0;
+    return this->pts;
+}
+
 int FFImage_getWidth ( FFImage* this )
 {
     NULL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) 0;
     return this->width;
 }
 int FFImage_getHeight ( FFImage* this )
 {
     NULL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) 0;
     return this->height;
 }
 uint8_t* FFImage_getBuffer ( FFImage* this )
 {
-    NULL_GUARD(this) 0;
+    NULL_GUARD(this) NULL;
+    ILLEGAL_GUARD(this) NULL;
     return this->buffer;
 }
