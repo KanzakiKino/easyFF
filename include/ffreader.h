@@ -19,6 +19,8 @@ void FFReader_delete ( FFReader** );
 // Checks if the error was thrown.
 FFError FFReader_checkError ( FFReader* );
 
+// Returns the specified stream.
+FFStream* FFReader_getStream ( FFReader*, unsigned int );
 // Finds video stream and returns it.
 FFStream* FFReader_findVideoStream ( FFReader* );
 // Finds audio stream and returns it.

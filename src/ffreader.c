@@ -121,6 +121,17 @@ FFError FFReader_checkError ( FFReader* this )
     return this->error;
 }
 
+FFStream* FFReader_getStream ( FFReader* this, unsigned int index )
+{
+    NULL_GUARD(this) NULL;
+    ILLEGAL_GUARD(this) NULL;
+
+    if ( this->streamCount > index ) {
+        return this->streams[index];
+    } else {
+        return NULL;
+    }
+}
 FFStream* FFReader_findVideoStream ( FFReader* this )
 {
     NULL_GUARD(this) NULL;
