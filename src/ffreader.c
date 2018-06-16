@@ -4,6 +4,7 @@
 
 #include <ffreader.h>
 #include <ffimage.h>
+#include <ffsound.h>
 #include <ffstream.h>
 #include <util.h>
 
@@ -184,6 +185,12 @@ char FFReader_decode ( FFReader* this, FFStream* stream )
 FFImage* FFReader_convertFrameToImage ( FFReader* this )
 {
     NULL_GUARD(this) NULL;
-    ILLEGAL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) NULL;
     return FFImage_newFromAVFrame( this->frame );
+}
+FFSound* FFReader_convertFrameToSound ( FFReader* this )
+{
+    NULL_GUARD(this) NULL;
+    ILLEGAL_GUARD(this) NULL;
+    return FFSound_newFromAVFrame( this->frame );
 }

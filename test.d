@@ -6,25 +6,28 @@ pragma(lib,"avutil");
 pragma(lib,"avcodec");
 pragma(lib,"avformat");
 pragma(lib,"easyff");
+pragma(lib,"swresample");
 pragma(lib,"swscale");
 
 extern(C)
 {
     alias FFError = ubyte;
 
-    struct FFImage;
-    int     FFImage_getWidth  ( FFImage* );
-    int     FFImage_getHeight ( FFImage* );
-    FFError FFImage_checkError ( FFImage* );
-
     struct FFReader;
     FFReader* FFReader_new                 ( const(char)* );
     void      FFReader_delete              ( FFReader** );
     FFError   FFReader_checkError          ( FFReader* );
-    FFStream* FFReader_findVideoStream     ( FFReader* );
     FFStream* FFReader_findAudioStream     ( FFReader* );
     byte      FFReader_decode              ( FFReader*, FFStream* );
-    FFImage*  FFReader_convertFrameToImage ( FFReader* );
+    FFSound*  FFReader_convertFrameToSound ( FFReader* );
+
+    struct FFSound;
+    void    FFSound_delete        ( FFSound** );
+    FFError FFSound_checkError    ( FFSound* );
+    int     FFSound_getSamples    ( FFSound* );
+    int     FFSound_getChannels   ( FFSound* );
+    int     FFSound_getSampleRate ( FFSound* );
+    float*  FFSound_getBuffer     ( FFSound* );
 
     struct FFStream;
     FFError FFStream_checkError ( FFStream* );
@@ -32,19 +35,16 @@ extern(C)
 
 void main ()
 {
-    FFReader* reader = FFReader_new( "/home/kinok/pics/test.jpg" );
+    auto reader = FFReader_new( "/home/kinok/sounds/test.mp3" );
     assert( reader );
 
-    auto video = FFReader_findVideoStream( reader );
-    assert( video );
-    "VideoStream Status: %d".writefln( FFStream_checkError( video ) );
+    auto audio = FFReader_findAudioStream( reader );
+    assert( !FFStream_checkError( audio ) );
 
-    while ( FFReader_decode( reader, video ) ) {
-        auto image = FFReader_convertFrameToImage( reader );
-        FFImage_checkError(image).writeln;
-        "%d,%d".writefln( FFImage_getWidth(image), FFImage_getHeight(image) );
+    while ( FFReader_decode( reader, audio ) ) {
+        auto snd = FFReader_convertFrameToSound( reader );
+        assert( !FFSound_checkError( snd ) );
+        FFSound_delete( &snd );
     }
-    "Reader Status: %d".writefln( FFReader_checkError( reader ) );
-
     FFReader_delete( &reader );
 }

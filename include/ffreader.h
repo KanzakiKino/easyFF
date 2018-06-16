@@ -8,6 +8,7 @@
 
 typedef struct FFImage  FFImage;
 typedef struct FFReader FFReader;
+typedef struct FFSound  FFSound;
 typedef struct FFStream FFStream;
 
 // Creates FFReader from file path. Returns null if failed.
@@ -29,5 +30,8 @@ char FFReader_decode ( FFReader*, FFStream* );
 // Converts the decoded frame to image.
 // You need to delete the image after using.
 FFImage* FFReader_convertFrameToImage ( FFReader* );
+// Converts the decoded frame to sound.
+// You need to delete the sound after using.
+FFSound* FFReader_convertFrameToSound ( FFReader* );
 
 #endif
