@@ -5,6 +5,7 @@
 #define EASYFF_FFSTREAM_H
 
 #include "fferror.h"
+#include "fftypes.h"
 
 typedef struct FFStream FFStream;
 
@@ -26,5 +27,11 @@ int FFStream_getIndex ( FFStream* );
 
 char FFStream_isVideo ( FFStream* );
 char FFStream_isAudio ( FFStream* );
+
+FFRational FFStream_getTimebase   ( FFStream* );
+FFRational FFStream_getAvgFPS     ( FFStream* );
+long       FFStream_getStartTime  ( FFStream* );
+long       FFStream_getDuration   ( FFStream* );
+long       FFStream_getFrameCount ( FFStream* );
 
 #endif

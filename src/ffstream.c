@@ -87,6 +87,7 @@ FFError FFStream_checkError ( FFStream* this )
 int FFStream_getIndex ( FFStream* this )
 {
     NULL_GUARD(this) -1;
+    NULL_GUARD(this->stream) -1;
     return this->stream->index;
 }
 
@@ -99,6 +100,43 @@ char FFStream_isAudio ( FFStream* this )
 {
     NULL_GUARD(this) 0;
     return this->stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO;
+}
+
+FFRational FFStream_getTimebase ( FFStream* this )
+{
+    FFRational result = {0,0};
+    if ( this && this->stream ) {
+        result.num = this->stream->time_base.num;
+        result.den = this->stream->time_base.den;
+    }
+    return result;
+}
+FFRational FFStream_getAvgFPS ( FFStream* this )
+{
+    FFRational result = {0,0};
+    if ( this && this->stream ) {
+        result.num = this->stream->avg_frame_rate.num;
+        result.den = this->stream->avg_frame_rate.den;
+    }
+    return result;
+}
+long FFStream_getStartTime ( FFStream* this )
+{
+    NULL_GUARD(this) -1;
+    NULL_GUARD(this->stream) -1;
+    return this->stream->start_time;
+}
+long FFStream_getDuration ( FFStream* this )
+{
+    NULL_GUARD(this) -1;
+    NULL_GUARD(this->stream) -1;
+    return this->stream->duration;
+}
+long FFStream_getFrameCount ( FFStream* this )
+{
+    NULL_GUARD(this) -1;
+    NULL_GUARD(this->stream) -1;
+    return this->stream->nb_frames;
 }
 
 FFError FFStream_sendPacket ( FFStream* this, AVPacket* packet )

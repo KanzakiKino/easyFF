@@ -13,6 +13,11 @@ extern(C)
 {
     alias FFError = ubyte;
 
+    struct FFRational
+    {
+        int num,den;
+    }
+
     struct FFReader;
     FFReader* FFReader_new                 ( const(char)* );
     void      FFReader_delete              ( FFReader** );
@@ -30,7 +35,8 @@ extern(C)
     float*  FFSound_getBuffer     ( FFSound* );
 
     struct FFStream;
-    FFError FFStream_checkError ( FFStream* );
+    FFError    FFStream_checkError  ( FFStream* );
+    long FFStream_getDuration ( FFStream* );
 }
 
 void main ()
@@ -40,6 +46,7 @@ void main ()
 
     auto audio = FFReader_findAudioStream( reader );
     assert( !FFStream_checkError( audio ) );
+    FFStream_getDuration(audio).writeln;
 
     while ( FFReader_decode( reader, audio ) ) {
         auto snd = FFReader_convertFrameToSound( reader );
