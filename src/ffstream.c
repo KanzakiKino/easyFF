@@ -23,7 +23,7 @@ struct FFStream
 #define IS_WRITABLE(T) FFStream_isWritable(T)
 
 // This is a private method that creates encoder context.
-FFError FFStream_createEncoder ( FFStream* this )
+FFError FFStream_createEncoder ( FFStream* this, AVCodec* type )
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
     ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
@@ -31,7 +31,6 @@ FFError FFStream_createEncoder ( FFStream* this )
     if ( this->codec ) {
         return EASYFF_NOERROR;
     }
-    AVCodec* type = avcodec_find_encoder( this->stream->codecpar->codec_id );
     if ( !type ) {
         THROW( EASYFF_ERROR_NO_CODEC );
     }
@@ -99,25 +98,31 @@ FFStream* FFStream_new ( AVStream* avstream, char writable )
     this->stream   = avstream;
     this->codec    = NULL;
 
-    FFError ret;
-    if ( writable ) {
-        ret = FFStream_createEncoder( this );
-    } else {
-        ret = FFStream_createDecoder( this );
-    }
+    return this;
+}
+FFStream* FFStream_newForRead ( AVStream* avstream )
+{
+    FFStream* this = FFStream_new( avstream, 0 );
+    NULL_GUARD(this) NULL;
+
+    FFError ret = FFStream_createDecoder( this );
     if ( ret != EASYFF_NOERROR ) {
         this->error = ret;
         return this;
     }
     return this;
 }
-FFStream* FFStream_newForRead ( AVStream* avstream )
+FFStream* FFStream_newForWrite ( AVStream* avstream, AVCodec* codec )
 {
-    return FFStream_new( avstream, 0 );
-}
-FFStream* FFStream_newForWrite ( AVStream* avstream )
-{
-    return FFStream_new( avstream, 1 );
+    FFStream* this = FFStream_new( avstream, 1 );
+    NULL_GUARD(this) NULL;
+
+    FFError ret = FFStream_createEncoder( this, codec );
+    if ( ret != EASYFF_NOERROR ) {
+        this->error = ret;
+        return this;
+    }
+    return this;
 }
 void FFStream_delete ( FFStream** this )
 {

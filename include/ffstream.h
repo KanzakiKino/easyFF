@@ -10,12 +10,13 @@
 typedef struct FFStream FFStream;
 
 #ifdef EASYFF_PROTECTED
+    typedef struct AVCodec AVCodec;
     typedef struct AVFrame AVFrame;
     typedef struct AVPacket AVPacket;
     typedef struct AVStream AVStream;
 
     FFStream* FFStream_newForRead ( AVStream* );
-    FFStream* FFStream_newForWrite ( AVStream* );
+    FFStream* FFStream_newForWrite ( AVStream*, AVCodec* );
     void FFStream_delete ( FFStream** );
 
     FFError FFStream_sendPacket ( FFStream*, AVPacket* );
