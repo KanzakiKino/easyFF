@@ -15,6 +15,7 @@ typedef struct FFStream FFStream;
     typedef struct AVStream AVStream;
 
     FFStream* FFStream_newForRead ( AVStream* );
+    FFStream* FFStream_newForWrite ( AVStream* );
     void FFStream_delete ( FFStream** );
 
     FFError FFStream_sendPacket ( FFStream*, AVPacket* );
@@ -22,6 +23,7 @@ typedef struct FFStream FFStream;
 #endif
 
 FFError FFStream_checkError ( FFStream* );
+char    FFStream_isWritable ( FFStream* );
 
 int FFStream_getIndex ( FFStream* );
 
