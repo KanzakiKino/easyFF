@@ -11,4 +11,8 @@
     if ( T->error != EASYFF_NOERROR ) \
         return
 
+#define THROW(T) \
+    this->error = T; \
+    return T
+
 #endif

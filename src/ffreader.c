@@ -56,14 +56,12 @@ FFError FFReader_findStreams ( FFReader* this )
 
     AVFormatContext* format = this->format;
     if ( avformat_find_stream_info( format, NULL ) ) {
-        this->error = EASYFF_ERROR_STREAM;
-        return EASYFF_ERROR_STREAM;
+        THROW( EASYFF_ERROR_STREAM );
     }
 
     FFError ret = FFReader_deleteStreams( this );
     if ( ret != EASYFF_NOERROR ) {
-        this->error = ret;
-        return ret;
+        THROW( ret );
     }
 
     this->streamCount = format->nb_streams;

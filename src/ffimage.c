@@ -46,15 +46,13 @@ FFError FFImage_copyAVFrame ( FFImage* this, AVFrame* frame, int dstW, int dstH 
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
     if ( !frame ) {
-        this->error = EASYFF_ERROR_NULL_POINTER;
-        return EASYFF_ERROR_NULL_POINTER;
+        THROW( EASYFF_ERROR_NULL_POINTER );
     }
 
     int srcW = frame->width, srcH = frame->height;
     enum AVPixelFormat srcForm = (enum AVPixelFormat) frame->format;
     if ( srcW == 0 || srcH == 0 ) {
-        this->error = EASYFF_ERROR_INVALID_FRAME;
-        return EASYFF_ERROR_INVALID_FRAME;
+        THROW( EASYFF_ERROR_INVALID_FRAME );
     }
 
     enum AVPixelFormat dstForm = AV_PIX_FMT_RGBA;
@@ -62,14 +60,12 @@ FFError FFImage_copyAVFrame ( FFImage* this, AVFrame* frame, int dstW, int dstH 
     struct SwsContext* sws = sws_getContext( srcW, srcH, srcForm,
            dstW, dstH, dstForm, SWS_BILINEAR, NULL, NULL, NULL );
     if ( !sws ) {
-        this->error = EASYFF_ERROR_CREATE_CONTEXT;
-        return EASYFF_ERROR_CREATE_CONTEXT;
+        THROW( EASYFF_ERROR_CREATE_CONTEXT );
     }
 
     FFError ret = FFImage_clear( this, dstW, dstH );
     if ( ret != EASYFF_NOERROR ) {
-        this->error = ret;
-        return ret;
+        THROW( ret );
     }
 
     uint8_t** srcData   = frame->data;

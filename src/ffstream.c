@@ -33,14 +33,12 @@ FFError FFStream_createEncoder ( FFStream* this )
     }
     AVCodec* type = avcodec_find_encoder( this->stream->codecpar->codec_id );
     if ( !type ) {
-        this->error = EASYFF_ERROR_NO_CODEC;
-        return EASYFF_ERROR_NO_CODEC;
+        THROW( EASYFF_ERROR_NO_CODEC );
     }
 
     this->codec = avcodec_alloc_context3( type );
     if ( !this->codec ) {
-        this->error = EASYFF_ERROR_CREATE_CONTEXT;
-        return EASYFF_ERROR_CREATE_CONTEXT;
+        THROW( EASYFF_ERROR_CREATE_CONTEXT );
     }
 
     // TODO
@@ -53,8 +51,7 @@ FFError FFStream_createEncoder ( FFStream* this )
 ABORT:
     avcodec_free_context( &this->codec );
     this->codec = NULL;
-    this->error = EASYFF_ERROR_CREATE_CONTEXT;
-    return EASYFF_ERROR_CREATE_CONTEXT;
+    THROW( EASYFF_ERROR_CREATE_CONTEXT );
 }
 // This is a private method that creates decoder context.
 FFError FFStream_createDecoder ( FFStream* this )
@@ -67,14 +64,12 @@ FFError FFStream_createDecoder ( FFStream* this )
     }
     AVCodec* type = avcodec_find_decoder( this->stream->codecpar->codec_id );
     if ( !type ) {
-        this->error = EASYFF_ERROR_NO_CODEC;
-        return EASYFF_ERROR_NO_CODEC;
+        THROW( EASYFF_ERROR_NO_CODEC );
     }
 
     this->codec = avcodec_alloc_context3( type );
     if ( !this->codec ) {
-        this->error = EASYFF_ERROR_CREATE_CONTEXT;
-        return EASYFF_ERROR_CREATE_CONTEXT;
+        THROW( EASYFF_ERROR_CREATE_CONTEXT );
     }
 
     if ( avcodec_parameters_to_context( this->codec, this->stream->codecpar ) ) {
@@ -88,8 +83,7 @@ FFError FFStream_createDecoder ( FFStream* this )
 ABORT:
     avcodec_free_context( &this->codec );
     this->codec = NULL;
-    this->error = EASYFF_ERROR_CREATE_CONTEXT;
-    return EASYFF_ERROR_CREATE_CONTEXT;
+    THROW( EASYFF_ERROR_CREATE_CONTEXT );
 }
 
 // This is a private method that creates new FFStream with filepath and writable.
@@ -210,17 +204,14 @@ FFError FFStream_sendPacket ( FFStream* this, AVPacket* packet )
     NULL_GUARD(this->codec) EASYFF_ERROR_NO_CODEC;
 
     if ( !this->codec ) {
-        this->error = EASYFF_ERROR_NO_CODEC;
-        return EASYFF_ERROR_NO_CODEC;
+        THROW( EASYFF_ERROR_NO_CODEC );
     }
     if ( IS_WRITABLE(this) ) {
-        this->error = EASYFF_ERROR_STREAM;
-        return EASYFF_ERROR_STREAM;
+        THROW( EASYFF_ERROR_STREAM );
     }
 
     if ( avcodec_send_packet( this->codec, packet ) ) {
-        this->error = EASYFF_ERROR_PACKET_LOST;
-        return EASYFF_ERROR_PACKET_LOST;
+        THROW( EASYFF_ERROR_PACKET_LOST );
     }
     return EASYFF_NOERROR;
 }
@@ -231,11 +222,11 @@ char FFStream_receiveFrame ( FFStream* this, AVFrame* frame )
 
     if ( !this->codec ) {
         this->error = EASYFF_ERROR_NO_CODEC;
-        return EASYFF_ERROR_NO_CODEC;
+        return 0;
     }
     if ( IS_WRITABLE(this) ) {
         this->error = EASYFF_ERROR_STREAM;
-        return EASYFF_ERROR_STREAM;
+        return 0;
     }
     return !avcodec_receive_frame( this->codec, frame );
 }
