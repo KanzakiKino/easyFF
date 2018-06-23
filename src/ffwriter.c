@@ -3,16 +3,20 @@
 #define EASYFF_PROTECTED
 
 #include <ffwriter.h>
+#include <ffstream.h>
 #include <util.h>
 
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 
 struct FFWriter
 {
     FFError error;
 
-    AVIOContext*     io;
     AVFormatContext* format;
+
+    FFStream* video;
+    FFStream* audio;
 };
 
 FFWriter* FFWriter_new ( const char* path )
@@ -23,6 +27,8 @@ FFWriter* FFWriter_new ( const char* path )
     }
     this->error  = EASYFF_NOERROR;
     this->format = NULL;
+    this->video  = NULL;
+    this->audio  = NULL;
 
     int ret = avformat_alloc_output_context2( &this->format, NULL, NULL, path );
     if ( ret < 0 ) {
@@ -31,13 +37,12 @@ FFWriter* FFWriter_new ( const char* path )
     }
 
     if ( this->format->flags & AVFMT_NOFILE ) {
-        ret = avio_open( &this->io, path, AVIO_FLAG_WRITE );
+        ret = avio_open( &this->format->pb, path, AVIO_FLAG_WRITE );
         if ( ret < 0 ) {
             this->error = EASYFF_ERROR_CREATE_CONTEXT;
             return this;
         }
     }
-    this->format->pb = this->io;
     return this;
 }
 void FFWriter_delete ( FFWriter** this )
@@ -45,8 +50,13 @@ void FFWriter_delete ( FFWriter** this )
     NULL_GUARD(this);
     NULL_GUARD(*this);
 
+    if ( (*this)->video ) {
+        FFStream_delete( &(*this)->video );
+    }
+    if ( (*this)->audio ) {
+        FFStream_delete( &(*this)->audio );
+    }
     avformat_free_context( (*this)->format );
-    avio_closep( &(*this)->io );
     free( *this );
 }
 
@@ -54,4 +64,34 @@ FFError FFWriter_checkError ( FFWriter* this )
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
     return this->error;
+}
+
+// This is a private method that creates stream with the specified codec.
+FFStream* FFWriter_createStream ( FFWriter* this, enum AVCodecID cid )
+{
+    AVCodec* codec = avcodec_find_encoder( cid );
+    AVStream* stream = avformat_new_stream( this->format, codec );
+
+    FFStream* result = FFStream_newForWrite( stream, codec );
+    if ( !result ) {
+        this->error = EASYFF_ERROR_CREATE_CONTEXT;
+        return NULL;
+    }
+    return result;
+}
+FFStream* FFWriter_createVideoStream ( FFWriter* this )
+{
+    NULL_GUARD(this) NULL;
+    ILLEGAL_GUARD(this) NULL;
+
+    this->video = FFWriter_createStream( this, this->format->video_codec_id );
+    return this->video;
+}
+FFStream* FFWriter_createAudioStream ( FFWriter* this )
+{
+    NULL_GUARD(this) NULL;
+    ILLEGAL_GUARD(this) NULL;
+
+    this->audio = FFWriter_createStream( this, this->format->audio_codec_id );
+    return this->audio;
 }

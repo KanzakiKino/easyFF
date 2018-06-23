@@ -7,7 +7,8 @@
 #include "fferror.h"
 #include "ffmeta.h"
 
-typedef struct FFImage  FFImage;
+typedef struct FFImage FFImage;
+typedef struct FFStream FFStream;
 typedef struct FFWriter FFWriter;
 
 // Creates FFWriter with file path. Returns null if failed.
@@ -17,5 +18,10 @@ void FFWriter_delete ( FFWriter** );
 
 // Checks if the error was thrown.
 FFError FFWriter_checkError ( FFWriter* );
+
+// Creates video stream.
+FFStream* FFWriter_createVideoStream ( FFWriter* );
+// Creates audio stream.
+FFStream* FFWriter_createAudioStream ( FFWriter* );
 
 #endif
