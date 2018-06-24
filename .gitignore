@@ -1,4 +1,5 @@
 /obj/
 /lib/
+/test.mp4
 *.o
 *.swp
