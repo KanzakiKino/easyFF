@@ -8,6 +8,7 @@
 #include "ffmeta.h"
 
 typedef struct FFImage FFImage;
+typedef struct FFSound FFSound;
 typedef struct FFStream FFStream;
 typedef struct FFWriter FFWriter;
 
@@ -27,5 +28,10 @@ FFStream* FFWriter_createAudioStream ( FFWriter* );
 // Writes a header.
 // You can't create streams anymore after calling this method.
 FFError FFWriter_writeHeader ( FFWriter* );
+
+// Encodes a image.
+FFError FFWriter_encodeImage ( FFWriter*, FFImage* );
+// Encodes a sound.
+FFError FFWriter_encodeSound ( FFWriter*, FFSound* );
 
 #endif

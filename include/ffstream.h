@@ -22,7 +22,9 @@ typedef struct FFStream FFStream;
     void FFStream_delete ( FFStream** );
 
     FFError FFStream_sendPacket ( FFStream*, AVPacket* );
-    char FFStream_receiveFrame ( FFStream*, AVFrame* );
+    FFError FFStream_sendFrame  ( FFStream*, AVFrame* );
+    char FFStream_receiveFrame  ( FFStream*, AVFrame* );
+    char FFStream_receivePacket ( FFStream*, AVPacket* );
 
     enum AVPixelFormat FFStream_getCompatiblePixelFormat( FFStream* );
     enum AVAudioFormat FFStream_getCompatibleAudioFormat( FFStream* );

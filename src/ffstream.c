@@ -196,8 +196,6 @@ FFError FFStream_sendPacket ( FFStream* this, AVPacket* packet )
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
     ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
-    NULL_GUARD(this->codec) EASYFF_ERROR_NO_CODEC;
-
     if ( !this->codec ) {
         THROW( EASYFF_ERROR_NO_CODEC );
     }
@@ -210,11 +208,26 @@ FFError FFStream_sendPacket ( FFStream* this, AVPacket* packet )
     }
     return EASYFF_NOERROR;
 }
+FFError FFStream_sendFrame ( FFStream* this, AVFrame* frame )
+{
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+    if ( !this->codec ) {
+        THROW( EASYFF_ERROR_NO_CODEC );
+    }
+    if ( !IS_WRITABLE(this) ) {
+        THROW( EASYFF_ERROR_STREAM );
+    }
+
+    if ( avcodec_send_frame( this->codec, frame ) ) {
+        THROW( EASYFF_ERROR_INVALID_FRAME );
+    }
+    return EASYFF_NOERROR;
+}
 char FFStream_receiveFrame ( FFStream* this, AVFrame* frame )
 {
     NULL_GUARD(this) 0;
     ILLEGAL_GUARD(this) 0;
-
     if ( !this->codec ) {
         this->error = EASYFF_ERROR_NO_CODEC;
         return 0;
@@ -224,6 +237,20 @@ char FFStream_receiveFrame ( FFStream* this, AVFrame* frame )
         return 0;
     }
     return !avcodec_receive_frame( this->codec, frame );
+}
+char FFStream_receivePacket ( FFStream* this, AVPacket* packet )
+{
+    NULL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) 0;
+    if ( !this->codec ) {
+        this->error = EASYFF_ERROR_NO_CODEC;
+        return 0;
+    }
+    if ( !IS_WRITABLE(this) ) {
+        this->error = EASYFF_ERROR_STREAM;
+        return 0;
+    }
+    return !avcodec_receive_packet( this->codec, packet );
 }
 
 enum AVPixelFormat FFStream_getCompatiblePixelFormat ( FFStream* this )

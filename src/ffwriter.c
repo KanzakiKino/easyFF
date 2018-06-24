@@ -51,12 +51,40 @@ FFStream* FFWriter_createStream ( FFWriter* this, enum AVCodecID cid )
     return result;
 }
 
+// This is a private method that encodes the AVFrame.
+FFError FFWriter_encode ( FFWriter* this, FFStream* stream, AVFrame* frame )
+{
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+    if ( !frame ) {
+        THROW( EASYFF_ERROR_INVALID_FRAME );
+    }
+    if ( !this->wroteHeader ) {
+        THROW( EASYFF_ERROR_INVALID_CONTEXT );
+    }
+
+    FFError ret = FFStream_sendFrame( stream, frame );
+    if ( ret != EASYFF_NOERROR ) {
+        THROW( ret );
+    }
+
+    AVPacket packet;
+    int      streamIndex = FFStream_getIndex( stream );
+
+    while ( FFStream_receivePacket( stream, &packet ) ) {
+        packet.stream_index = streamIndex;
+        if ( av_interleaved_write_frame( this->format, &packet ) ) {
+            THROW( EASYFF_ERROR_PACKET_LOST );
+        }
+    }
+    return EASYFF_NOERROR;
+}
+
 FFWriter* FFWriter_new ( const char* path )
 {
     FFWriter* this = malloc( sizeof(FFWriter) );
-    if ( !this ) {
-        return NULL;
-    }
+    NULL_GUARD(this) NULL;
+
     this->error       = EASYFF_NOERROR;
     this->format      = NULL;
     this->wroteHeader = 0;
@@ -127,5 +155,16 @@ FFError FFWriter_writeHeader ( FFWriter* this )
         THROW( EASYFF_ERROR_INVALID_CONTEXT );
     }
     this->wroteHeader = 1;
+    return EASYFF_NOERROR;
+}
+
+FFError FFWriter_encodeImage ( FFWriter* this, FFImage* img )
+{
+    //TODO
+    return EASYFF_NOERROR;
+}
+FFError FFWriter_encodeSound ( FFWriter* this, FFSound* img )
+{
+    //TODO
     return EASYFF_NOERROR;
 }
