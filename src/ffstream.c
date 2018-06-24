@@ -23,6 +23,7 @@ struct FFStream
 #define IS_WRITABLE(T) FFStream_isWritable(T)
 
 // This is a private method that creates encoder context.
+// This method doesn't open the encoder context.
 FFError FFStream_createEncoder ( FFStream* this, AVCodec* type )
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
@@ -39,18 +40,7 @@ FFError FFStream_createEncoder ( FFStream* this, AVCodec* type )
     if ( !this->codec ) {
         THROW( EASYFF_ERROR_CREATE_CONTEXT );
     }
-
-    // TODO
-
-    if ( avcodec_open2( this->codec, type, NULL ) ) {
-        goto ABORT;
-    }
     return EASYFF_NOERROR;
-
-ABORT:
-    avcodec_free_context( &this->codec );
-    this->codec = NULL;
-    THROW( EASYFF_ERROR_CREATE_CONTEXT );
 }
 // This is a private method that creates decoder context.
 FFError FFStream_createDecoder ( FFStream* this )
@@ -234,4 +224,79 @@ char FFStream_receiveFrame ( FFStream* this, AVFrame* frame )
         return 0;
     }
     return !avcodec_receive_frame( this->codec, frame );
+}
+
+enum AVPixelFormat FFStream_getCompatiblePixelFormat ( FFStream* this )
+{
+    NULL_GUARD(this) AV_PIX_FMT_NONE;
+    ILLEGAL_GUARD(this) AV_PIX_FMT_NONE;
+    NULL_GUARD(this->codec) AV_PIX_FMT_NONE;
+    NULL_GUARD(this->codec->codec) AV_PIX_FMT_NONE;
+    NULL_GUARD(this->codec->codec->pix_fmts) AV_PIX_FMT_NONE;
+    return this->codec->codec->pix_fmts[0];
+}
+enum AVSampleFormat FFStream_getCompatibleSampleFormat ( FFStream* this )
+{
+    NULL_GUARD(this) AV_SAMPLE_FMT_NONE;
+    ILLEGAL_GUARD(this) AV_SAMPLE_FMT_NONE;
+    NULL_GUARD(this->codec) AV_SAMPLE_FMT_NONE;
+    NULL_GUARD(this->codec->codec) AV_SAMPLE_FMT_NONE;
+    NULL_GUARD(this->codec->codec->sample_fmts) AV_SAMPLE_FMT_NONE;
+    return this->codec->codec->sample_fmts[0];
+}
+FFError FFStream_setupVideoEncoder ( FFStream* this, int w, int h, FFRational tb )
+{
+    NULL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) 0;
+    if ( !IS_WRITABLE(this) ) {
+        THROW( EASYFF_ERROR_STREAM );
+    }
+    if ( !this->codec ) {
+        THROW( EASYFF_ERROR_NO_CODEC );
+    }
+    if ( this->codec->codec_type != AVMEDIA_TYPE_VIDEO ) {
+        THROW( EASYFF_ERROR_NO_CODEC );
+    }
+
+    this->codec->pix_fmt       = FFStream_getCompatiblePixelFormat( this );
+    this->codec->width         = w;
+    this->codec->height        = h;
+    this->codec->time_base.num = tb.num;
+    this->codec->time_base.den = tb.den;
+
+    if ( avcodec_open2( this->codec, this->codec->codec, NULL ) ) {
+        THROW( EASYFF_ERROR_CREATE_CONTEXT );
+    }
+    if ( avcodec_parameters_from_context( this->stream->codecpar, this->codec) ) {
+        THROW( EASYFF_ERROR_STREAM );
+    }
+    return EASYFF_NOERROR;
+}
+FFError FFStream_setupAudioEncoder ( FFStream* this, int chnl, int rate, FFRational tb )
+{
+    NULL_GUARD(this) 0;
+    ILLEGAL_GUARD(this) 0;
+    if ( !IS_WRITABLE(this) ) {
+        THROW( EASYFF_ERROR_STREAM );
+    }
+    if ( !this->codec ) {
+        THROW( EASYFF_ERROR_NO_CODEC );
+    }
+    if ( this->codec->codec_type != AVMEDIA_TYPE_AUDIO ) {
+        THROW( EASYFF_ERROR_NO_CODEC );
+    }
+
+    this->codec->sample_fmt    = FFStream_getCompatibleSampleFormat( this );
+    this->codec->channel_layout = av_get_default_channel_layout( chnl );
+    this->codec->sample_rate    = rate;
+    this->codec->time_base.num  = tb.num;
+    this->codec->time_base.den  = tb.den;
+
+    if ( avcodec_open2( this->codec, this->codec->codec, NULL ) ) {
+        THROW( EASYFF_ERROR_CREATE_CONTEXT );
+    }
+    if ( avcodec_parameters_from_context( this->stream->codecpar, this->codec) ) {
+        THROW( EASYFF_ERROR_CREATE_CONTEXT );
+    }
+    return EASYFF_NOERROR;
 }
