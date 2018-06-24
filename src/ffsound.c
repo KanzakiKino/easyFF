@@ -177,7 +177,7 @@ FFError FFSound_convertToAVFrame ( FFSound* this, enum AVSampleFormat dstForm, i
     int64_t             srcChLayout   = av_get_default_channel_layout( this->channels );
     int64_t             srcSampleRate = this->sampleRate;
     SwrContext* swr = swr_alloc_set_opts( NULL,
-           dstForm, srcChLayout, dstSampleRate,
+           srcChLayout, dstForm, dstSampleRate,
            srcChLayout, srcForm, srcSampleRate, 0, NULL);
     if ( !swr || swr_init( swr ) ) {
         THROW( EASYFF_ERROR_CREATE_CONTEXT );
@@ -185,7 +185,7 @@ FFError FFSound_convertToAVFrame ( FFSound* this, enum AVSampleFormat dstForm, i
 
     int srcSamples = this->samples;
     int dstSamples = swr_get_out_samples( swr, srcSamples );
-    int dstChannels = av_get_channel_layout_nb_channels( srcChLayout );
+    int dstChannels = this->channels;
     av_samples_alloc( frame->data, frame->linesize,
             dstChannels, dstSamples, dstForm, 1 );
 
@@ -195,11 +195,11 @@ FFError FFSound_convertToAVFrame ( FFSound* this, enum AVSampleFormat dstForm, i
         THROW( EASYFF_ERROR_INVALID_FRAME );
     }
     frame->pts            = this->pts;
-    frame->nb_samples     = this->samples;
-    frame->channels       = this->channels;
+    frame->nb_samples     = dstSamples;
+    frame->channels       = dstChannels;
     frame->channel_layout = srcChLayout;
     frame->sample_rate    = dstSampleRate;
 
-    swr_free( &swr );
+    swr_free( &swr ); // FIX
     return EASYFF_NOERROR;
 }
