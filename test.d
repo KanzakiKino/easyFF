@@ -29,6 +29,7 @@ extern(C)
     FFError   FFWriter_checkError        ( FFWriter* );
     FFStream* FFWriter_createVideoStream ( FFWriter* );
     FFStream* FFWriter_createAudioStream ( FFWriter* );
+    FFError   FFWriter_writeHeader       ( FFWriter* );
 }
 
 void main ()
@@ -45,6 +46,9 @@ void main ()
     assert( audio && !FFStream_checkError(audio) );
     FFStream_setupAudioEncoder( audio, 2, 44100, FFRational(1,30) );
     assert( !FFStream_checkError(audio) );
+
+    FFWriter_writeHeader( writer );
+    assert( !FFWriter_checkError(writer) );
 
     FFWriter_delete( &writer );
 }

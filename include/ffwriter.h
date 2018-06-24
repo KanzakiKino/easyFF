@@ -24,4 +24,8 @@ FFStream* FFWriter_createVideoStream ( FFWriter* );
 // Creates audio stream.
 FFStream* FFWriter_createAudioStream ( FFWriter* );
 
+// Writes a header.
+// You can't create streams anymore after calling this method.
+FFError FFWriter_writeHeader ( FFWriter* );
+
 #endif
