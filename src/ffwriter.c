@@ -4,6 +4,7 @@
 
 #include <ffwriter.h>
 #include <ffimage.h>
+#include <ffsound.h>
 #include <ffstream.h>
 #include <util.h>
 
@@ -181,9 +182,29 @@ FFError FFWriter_encodeImage ( FFWriter* this, FFImage* img )
     av_frame_free( &frame );
     return EASYFF_NOERROR;
 }
-FFError FFWriter_encodeSound ( FFWriter* this, FFSound* img )
+FFError FFWriter_encodeSound ( FFWriter* this, FFSound* snd )
 {
-    //TODO
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+    NULL_GUARD(snd) EASYFF_ERROR_NULL_POINTER;
+
+    enum AVSampleFormat fmt = FFStream_getCompatibleSampleFormat( this->audio );
+    int sampleRate = FFStream_getSampleRate( this->audio );
+    if ( fmt == AV_SAMPLE_FMT_NONE || !sampleRate ) {
+        THROW( EASYFF_ERROR_INVALID_FRAME );
+    }
+
+    AVFrame* frame = av_frame_alloc();
+    FFError ret = FFSound_convertToAVFrame( snd, fmt, sampleRate, frame );
+    if ( ret != EASYFF_NOERROR ) {
+        THROW( ret );
+    }
+
+    ret = FFWriter_encode( this, this->audio, frame );
+    if ( ret != EASYFF_NOERROR ) {
+        THROW( ret );
+    }
+    av_frame_free( &frame );
     return EASYFF_NOERROR;
 }
 

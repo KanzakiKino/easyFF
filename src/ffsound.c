@@ -44,7 +44,6 @@ FFError FFSound_copyAVFrame ( FFSound* this, AVFrame* frame )
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
     ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
     NULL_GUARD(frame) EASYFF_ERROR_NULL_POINTER;
-
     if ( frame->nb_samples <= 0 ) {
         THROW( EASYFF_ERROR_INVALID_FRAME );
     }
@@ -69,7 +68,7 @@ FFError FFSound_copyAVFrame ( FFSound* this, AVFrame* frame )
     }
 
     const uint8_t** srcData   = (const uint8_t**)frame->data;
-    uint8_t*        dstData[] = {(uint8_t*)this->buffer};
+    uint8_t*        dstData[] = {(uint8_t*)this->buffer,NULL};
     if ( swr_convert( swr, dstData, dstSamples, srcData, srcSamples ) < 0 ) {
         THROW( EASYFF_ERROR_INVALID_FRAME );
     }
@@ -99,6 +98,23 @@ FFSound* FFSound_newFromAVFrame ( AVFrame* frame )
     }
     return this;
 }
+FFSound* FFSound_new ( int samples, int chnls, int rate, long pts )
+{
+    FFSound* this = malloc( sizeof(FFSound) );
+    this->error      = EASYFF_NOERROR;
+    this->pts        = pts;
+    this->samples    = 0;
+    this->channels   = 0;
+    this->sampleRate = rate;
+    this->buffer     = NULL;
+
+    FFError ret = FFSound_clear( this, samples, chnls );
+    if ( ret != EASYFF_NOERROR ) {
+        this->error = ret;
+        return this;
+    }
+    return this;
+}
 void FFSound_delete ( FFSound** this )
 {
     NULL_GUARD(this);
@@ -119,6 +135,12 @@ long FFSound_getPts ( FFSound* this )
     NULL_GUARD(this) 0;
     ILLEGAL_GUARD(this) 0;
     return this->pts;
+}
+void FFSound_setPts ( FFSound* this, long pts )
+{
+    NULL_GUARD(this);
+    ILLEGAL_GUARD(this);
+    this->pts = pts;
 }
 int FFSound_getSamples ( FFSound* this )
 {
@@ -143,4 +165,41 @@ float* FFSound_getBuffer ( FFSound* this )
     NULL_GUARD(this) NULL;
     ILLEGAL_GUARD(this) NULL;
     return this->buffer;
+}
+
+FFError FFSound_convertToAVFrame ( FFSound* this, enum AVSampleFormat dstForm, int dstSampleRate, AVFrame* frame )
+{
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+    NULL_GUARD(frame) EASYFF_ERROR_NULL_POINTER;
+
+    enum AVSampleFormat srcForm       = AV_SAMPLE_FMT_FLT;
+    int64_t             srcChLayout   = av_get_default_channel_layout( this->channels );
+    int64_t             srcSampleRate = this->sampleRate;
+    SwrContext* swr = swr_alloc_set_opts( NULL,
+           dstForm, srcChLayout, dstSampleRate,
+           srcChLayout, srcForm, srcSampleRate, 0, NULL);
+    if ( !swr || swr_init( swr ) ) {
+        THROW( EASYFF_ERROR_CREATE_CONTEXT );
+    }
+
+    int srcSamples = this->samples;
+    int dstSamples = swr_get_out_samples( swr, srcSamples );
+    int dstChannels = av_get_channel_layout_nb_channels( srcChLayout );
+    av_samples_alloc( frame->data, frame->linesize,
+            dstChannels, dstSamples, dstForm, 1 );
+
+    const uint8_t* srcData[] = {(uint8_t*)this->buffer,NULL};
+    uint8_t**      dstData   = (uint8_t**)frame->data;
+    if ( swr_convert( swr, dstData, dstSamples, srcData, srcSamples ) < 0 ) {
+        THROW( EASYFF_ERROR_INVALID_FRAME );
+    }
+    frame->pts            = this->pts;
+    frame->nb_samples     = this->samples;
+    frame->channels       = this->channels;
+    frame->channel_layout = srcChLayout;
+    frame->sample_rate    = dstSampleRate;
+
+    swr_free( &swr );
+    return EASYFF_NOERROR;
 }

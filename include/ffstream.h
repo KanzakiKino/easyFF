@@ -27,7 +27,7 @@ typedef struct FFStream FFStream;
     char FFStream_receivePacket ( FFStream*, AVPacket* );
 
     enum AVPixelFormat FFStream_getCompatiblePixelFormat( FFStream* );
-    enum AVAudioFormat FFStream_getCompatibleAudioFormat( FFStream* );
+    enum AVSampleFormat FFStream_getCompatibleSampleFormat( FFStream* );
 #endif
 
 FFError FFStream_checkError ( FFStream* );
@@ -43,6 +43,8 @@ FFRational FFStream_getAvgFPS     ( FFStream* );
 long       FFStream_getStartTime  ( FFStream* );
 long       FFStream_getDuration   ( FFStream* );
 long       FFStream_getFrameCount ( FFStream* );
+
+int FFStream_getSampleRate ( FFStream* );
 
 FFError FFStream_setupVideoEncoder ( FFStream*, int, int, FFRational );
 FFError FFStream_setupAudioEncoder ( FFStream*, int, int, FFRational );

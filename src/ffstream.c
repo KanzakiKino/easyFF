@@ -192,6 +192,13 @@ long FFStream_getFrameCount ( FFStream* this )
     return this->stream->nb_frames;
 }
 
+int FFStream_getSampleRate ( FFStream* this )
+{
+    NULL_GUARD(this) 0;
+    NULL_GUARD(this->codec) 0;
+    return this->codec->sample_rate;
+}
+
 FFError FFStream_sendPacket ( FFStream* this, AVPacket* packet )
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
