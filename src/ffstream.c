@@ -250,7 +250,12 @@ char FFStream_receivePacket ( FFStream* this, AVPacket* packet )
         this->error = EASYFF_ERROR_STREAM;
         return 0;
     }
-    return !avcodec_receive_packet( this->codec, packet );
+    int ret = avcodec_receive_packet( this->codec, packet );
+    if ( ret ) {
+        return 0;
+    }
+    av_packet_rescale_ts( packet, this->codec->time_base, this->stream->time_base );
+    return 1;
 }
 
 enum AVPixelFormat FFStream_getCompatiblePixelFormat ( FFStream* this )

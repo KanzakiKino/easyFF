@@ -34,4 +34,7 @@ FFError FFWriter_encodeImage ( FFWriter*, FFImage* );
 // Encodes a sound.
 FFError FFWriter_encodeSound ( FFWriter*, FFSound* );
 
+// Flushes encoders.
+FFError FFWriter_flush ( FFWriter* );
+
 #endif

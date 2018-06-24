@@ -3,6 +3,7 @@
 #define EASYFF_PROTECTED
 
 #include <ffwriter.h>
+#include <ffimage.h>
 #include <ffstream.h>
 #include <util.h>
 
@@ -56,9 +57,6 @@ FFError FFWriter_encode ( FFWriter* this, FFStream* stream, AVFrame* frame )
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
     ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
-    if ( !frame ) {
-        THROW( EASYFF_ERROR_INVALID_FRAME );
-    }
     if ( !this->wroteHeader ) {
         THROW( EASYFF_ERROR_INVALID_CONTEXT );
     }
@@ -68,15 +66,16 @@ FFError FFWriter_encode ( FFWriter* this, FFStream* stream, AVFrame* frame )
         THROW( ret );
     }
 
-    AVPacket packet;
-    int      streamIndex = FFStream_getIndex( stream );
+    AVPacket* packet = av_packet_alloc();
+    int       streamIndex = FFStream_getIndex( stream );
 
-    while ( FFStream_receivePacket( stream, &packet ) ) {
-        packet.stream_index = streamIndex;
-        if ( av_interleaved_write_frame( this->format, &packet ) ) {
+    while ( FFStream_receivePacket( stream, packet ) ) {
+        packet->stream_index = streamIndex;
+        if ( av_interleaved_write_frame( this->format, packet ) ) {
             THROW( EASYFF_ERROR_PACKET_LOST );
         }
     }
+    av_packet_free( &packet );
     return EASYFF_NOERROR;
 }
 
@@ -160,11 +159,49 @@ FFError FFWriter_writeHeader ( FFWriter* this )
 
 FFError FFWriter_encodeImage ( FFWriter* this, FFImage* img )
 {
-    //TODO
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+    NULL_GUARD(img) EASYFF_ERROR_NULL_POINTER;
+
+    enum AVPixelFormat fmt = FFStream_getCompatiblePixelFormat( this->video );
+    if ( fmt == AV_PIX_FMT_NONE ) {
+        THROW( EASYFF_ERROR_INVALID_FRAME );
+    }
+
+    AVFrame* frame = av_frame_alloc();
+    FFError ret = FFImage_convertToAVFrame( img, fmt, frame );
+    if ( ret != EASYFF_NOERROR ) {
+        THROW( ret );
+    }
+
+    ret = FFWriter_encode( this, this->video, frame );
+    if ( ret != EASYFF_NOERROR ) {
+        THROW( ret );
+    }
+    av_frame_free( &frame );
     return EASYFF_NOERROR;
 }
 FFError FFWriter_encodeSound ( FFWriter* this, FFSound* img )
 {
     //TODO
+    return EASYFF_NOERROR;
+}
+
+FFError FFWriter_flush ( FFWriter* this )
+{
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+
+    FFError ret = FFWriter_encode( this, this->video, NULL );
+    if ( ret != EASYFF_NOERROR ) {
+        THROW( ret );
+    }
+    ret = FFWriter_encode( this, this->audio, NULL );
+    if ( ret != EASYFF_NOERROR ) {
+        THROW( ret );
+    }
+    if ( av_write_trailer( this->format ) ) {
+        THROW( EASYFF_ERROR_INVALID_CONTEXT );
+    }
     return EASYFF_NOERROR;
 }

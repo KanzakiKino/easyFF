@@ -18,6 +18,12 @@ extern(C)
         int num, den;
     }
 
+    struct FFImage;
+    FFImage* FFImage_new        ( int, int, long );
+    void     FFImage_delete     ( FFImage** );
+    FFError  FFImage_checkError ( FFImage* );
+    void     FFImage_setPts     ( FFImage*, long );
+
     struct FFStream;
     FFError FFStream_checkError   ( FFStream* );
     FFError FFStream_setupVideoEncoder ( FFStream*, int, int, FFRational );
@@ -30,6 +36,8 @@ extern(C)
     FFStream* FFWriter_createVideoStream ( FFWriter* );
     FFStream* FFWriter_createAudioStream ( FFWriter* );
     FFError   FFWriter_writeHeader       ( FFWriter* );
+    FFError   FFWriter_encodeImage       ( FFWriter*, FFImage* );
+    FFError   FFWriter_flush             ( FFWriter* );
 }
 
 void main ()
@@ -50,5 +58,15 @@ void main ()
     FFWriter_writeHeader( writer );
     assert( !FFWriter_checkError(writer) );
 
+    for ( long i = 0; i < 100; i++ ) {
+        FFImage* img = FFImage_new( 100, 100, i );
+        assert( img && !FFImage_checkError(img) );
+        FFWriter_encodeImage( writer, img );
+        assert( !FFWriter_checkError(writer) );
+        FFImage_delete( &img );
+    }
+
+    FFWriter_flush( writer );
+    assert( !FFWriter_checkError(writer) );
     FFWriter_delete( &writer );
 }

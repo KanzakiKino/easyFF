@@ -6,6 +6,7 @@
 #include <util.h>
 
 #include <libavutil/frame.h>
+#include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 
 #include <stdlib.h>
@@ -70,8 +71,8 @@ FFError FFImage_copyAVFrame ( FFImage* this, AVFrame* frame, int dstW, int dstH 
 
     uint8_t** srcData   = frame->data;
     int*      srcLs     = frame->linesize;
-    uint8_t*  dstData[] = {this->buffer};
-    int       dstLs  [] = {dstW*FFIMAGE_BYTE_PER_PIX};
+    uint8_t*  dstData[] = {this->buffer,NULL};
+    int       dstLs  [] = {dstW*FFIMAGE_BYTE_PER_PIX,0};
     sws_scale( sws, (const uint8_t* const*)srcData,
             srcLs, 0, dstH, dstData, dstLs );
     this->pts = frame->pts;
@@ -88,6 +89,8 @@ FFImage* FFImage_newFromAVFrame ( AVFrame* frame )
     }
 
     FFImage* this = malloc( sizeof(FFImage) );
+    NULL_GUARD(this) NULL;
+
     this->error  = EASYFF_NOERROR;
     this->pts    = 0;
     this->width  = 0;
@@ -96,6 +99,27 @@ FFImage* FFImage_newFromAVFrame ( AVFrame* frame )
 
     int w = frame->width, h = frame->height;
     FFError ret = FFImage_copyAVFrame( this, frame, w, h );
+    if ( ret != EASYFF_NOERROR ) {
+        this->error = ret;
+        return this;
+    }
+    return this;
+}
+FFImage* FFImage_new ( int w, int h, long pts )
+{
+    if ( w <= 0 || h <= 0 ) {
+        return NULL;
+    }
+    FFImage* this = malloc( sizeof(FFImage) );
+    NULL_GUARD(this) NULL;
+
+    this->error  = EASYFF_NOERROR;
+    this->pts    = pts;
+    this->width  = 0;
+    this->height = 0;
+    this->buffer = NULL;
+
+    FFError ret = FFImage_clear( this, w, h );
     if ( ret != EASYFF_NOERROR ) {
         this->error = ret;
         return this;
@@ -124,6 +148,12 @@ long FFImage_getPts ( FFImage* this )
     ILLEGAL_GUARD(this) 0;
     return this->pts;
 }
+void FFImage_setPts ( FFImage* this, long pts )
+{
+    NULL_GUARD(this);
+    ILLEGAL_GUARD(this);
+    this->pts = pts;
+}
 
 int FFImage_getWidth ( FFImage* this )
 {
@@ -142,4 +172,41 @@ uint8_t* FFImage_getBuffer ( FFImage* this )
     NULL_GUARD(this) NULL;
     ILLEGAL_GUARD(this) NULL;
     return this->buffer;
+}
+
+FFError FFImage_convertToAVFrame ( FFImage* this, enum AVPixelFormat dstForm, AVFrame* frame )
+{
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+    if ( !frame ) {
+        THROW( EASYFF_ERROR_NULL_POINTER );
+    }
+
+    int srcW = this->width, srcH = this->height;
+    enum AVPixelFormat srcForm = AV_PIX_FMT_RGBA;
+
+    struct SwsContext* sws = sws_getContext( srcW, srcH, srcForm,
+           srcW, srcH, dstForm, SWS_BILINEAR, NULL, NULL, NULL );
+    if ( !sws ) {
+        THROW( EASYFF_ERROR_CREATE_CONTEXT );
+    }
+
+    int ret = av_image_alloc( frame->data, frame->linesize, srcW, srcH, dstForm, 1 );
+    if ( ret < 0 ) {
+        THROW( EASYFF_ERROR_INVALID_FRAME );
+    }
+
+    uint8_t*  srcData[] = {this->buffer,NULL};
+    int       srcLs  [] = {srcW*FFIMAGE_BYTE_PER_PIX,0};
+    uint8_t** dstData   = frame->data;;
+    int*      dstLs     = frame->linesize;
+    sws_scale( sws, (const uint8_t* const*)srcData,
+            srcLs, 0, srcH, dstData, dstLs );
+    frame->pts     = this->pts;
+    frame->format  = (int)dstForm;
+    frame->width   = srcW;
+    frame->height  = srcH;
+
+    sws_freeContext( sws );
+    return EASYFF_NOERROR;
 }
