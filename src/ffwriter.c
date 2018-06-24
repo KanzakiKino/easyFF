@@ -19,6 +19,32 @@ struct FFWriter
     FFStream* audio;
 };
 
+// This is a private method that creates stream with the specified codec.
+FFStream* FFWriter_createStream ( FFWriter* this, enum AVCodecID cid )
+{
+    NULL_GUARD(this) NULL;
+    ILLEGAL_GUARD(this) NULL;
+
+    AVCodec* codec = avcodec_find_encoder( cid );
+    if ( !codec ) {
+        this->error = EASYFF_ERROR_NO_CODEC;
+        return NULL;
+    }
+
+    AVStream* stream = avformat_new_stream( this->format, codec );
+    if ( !stream ) {
+        this->error = EASYFF_ERROR_STREAM;
+        return NULL;
+    }
+
+    FFStream* result = FFStream_newForWrite( stream, codec );
+    if ( !result ) {
+        this->error = EASYFF_ERROR_CREATE_CONTEXT;
+        return NULL;
+    }
+    return result;
+}
+
 FFWriter* FFWriter_new ( const char* path )
 {
     FFWriter* this = malloc( sizeof(FFWriter) );
@@ -66,25 +92,12 @@ FFError FFWriter_checkError ( FFWriter* this )
     return this->error;
 }
 
-// This is a private method that creates stream with the specified codec.
-FFStream* FFWriter_createStream ( FFWriter* this, enum AVCodecID cid )
-{
-    AVCodec* codec = avcodec_find_encoder( cid );
-    AVStream* stream = avformat_new_stream( this->format, codec );
-
-    FFStream* result = FFStream_newForWrite( stream, codec );
-    if ( !result ) {
-        this->error = EASYFF_ERROR_CREATE_CONTEXT;
-        return NULL;
-    }
-    return result;
-}
 FFStream* FFWriter_createVideoStream ( FFWriter* this )
 {
     NULL_GUARD(this) NULL;
     ILLEGAL_GUARD(this) NULL;
 
-    this->video = FFWriter_createStream( this, this->format->video_codec_id );
+    this->video = FFWriter_createStream( this, this->format->oformat->video_codec );
     return this->video;
 }
 FFStream* FFWriter_createAudioStream ( FFWriter* this )
@@ -92,6 +105,6 @@ FFStream* FFWriter_createAudioStream ( FFWriter* this )
     NULL_GUARD(this) NULL;
     ILLEGAL_GUARD(this) NULL;
 
-    this->audio = FFWriter_createStream( this, this->format->audio_codec_id );
+    this->audio = FFWriter_createStream( this, this->format->oformat->audio_codec );
     return this->audio;
 }
