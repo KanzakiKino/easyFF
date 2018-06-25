@@ -2,6 +2,7 @@
 // Copyright 2018 KanzakiKino
 
 import std.conv,
+       std.random,
        std.stdio;
 pragma(lib,"avutil");
 pragma(lib,"avcodec");
@@ -22,6 +23,7 @@ extern(C)
     FFImage* FFImage_new        ( int, int, long );
     void     FFImage_delete     ( FFImage** );
     FFError  FFImage_checkError ( FFImage* );
+    char*    FFImage_getBuffer  ( FFImage* );
     void     FFImage_setPts     ( FFImage*, long );
 
     struct FFSound;
@@ -32,9 +34,11 @@ extern(C)
     void     FFSound_setPts     ( FFSound*, long );
 
     struct FFStream;
-    FFError FFStream_checkError   ( FFStream* );
+    FFError FFStream_checkError        ( FFStream* );
     FFError FFStream_setupVideoEncoder ( FFStream*, int, int, FFRational );
-    FFError FFStream_setupAudioEncoder ( FFStream*, int, int, FFRational );
+    FFError FFStream_setupAudioEncoder ( FFStream*, int, int );
+    FFError FFStream_getFrameSize      ( FFStream* );
+    FFRational FFStream_getTimebase      ( FFStream* );
 
     struct FFWriter;
     FFWriter* FFWriter_new               ( const(char)* );
@@ -50,43 +54,52 @@ extern(C)
 
 void main ()
 {
-    auto writer = FFWriter_new( "test.mp4" );
+    enum OutputPath = "test.mp4";
+    enum VideoW = 1024, VideoH = 768;
+    enum FPS = 30, DurationSec = 10;
+    enum SampleRate = 48000, Channels = 2;
+    enum SamplesPerFrame = 1024/Channels;
+
+    auto writer = FFWriter_new( OutputPath );
     assert( writer && !FFWriter_checkError(writer) );
 
     auto video = FFWriter_createVideoStream( writer );
     assert( video && !FFStream_checkError(video) );
-    FFStream_setupVideoEncoder( video, 100, 100, FFRational(1,30) );
+    FFStream_setupVideoEncoder( video, VideoW, VideoH, FFRational(1,FPS) );
     assert( !FFStream_checkError(video) );
 
     auto audio = FFWriter_createAudioStream( writer );
     assert( audio && !FFStream_checkError(audio) );
-    FFStream_setupAudioEncoder( audio, 1, 44100, FFRational(1,30*1024) );
+    FFStream_setupAudioEncoder( audio, Channels, SampleRate );
     assert( !FFStream_checkError(audio) );
 
     FFWriter_writeHeader( writer );
     assert( !FFWriter_checkError(writer) );
 
-    FFImage* img = FFImage_new( 100, 100, 0 );
+    FFImage* img = FFImage_new( VideoW, VideoH, 0 );
     assert( img && !FFImage_checkError(img) );
-
-    FFSound* snd = FFSound_new( 1024, 1, 44100, 0 );
-    assert( snd && !FFSound_checkError(snd) );
-    auto sndBuffer = FFSound_getBuffer( snd );
-    for ( size_t i = 0; i < 1024; i++ ) {
-        import std.random;
-        sndBuffer[i] = uniform(-1f,1f);
+    auto imgBuffer = FFImage_getBuffer( img );
+    for ( size_t i = 0; i < VideoW*VideoH*4; i++ ) {
+        imgBuffer[i] = uniform(byte.min,byte.max);
     }
-
-    for ( long i = 0; i < 100; i++ ) {
+    for ( long i = 0; i < DurationSec*FPS; i++ ) {
         FFImage_setPts( img, i );
         FFWriter_encodeImage( writer, img );
         assert( !FFWriter_checkError(writer) );
-        FFSound_setPts( snd, i*1024 );
+    }
+    FFImage_delete( &img );
+
+    FFSound* snd = FFSound_new( SamplesPerFrame, Channels, SampleRate, 0 );
+    assert( snd && !FFSound_checkError(snd) );
+    auto sndBuffer = FFSound_getBuffer( snd );
+    for ( size_t i = 0; i < SamplesPerFrame*Channels; i++ ) {
+        sndBuffer[i] = uniform(-1f,1f);
+    }
+    for ( long i = 0; i < DurationSec*SampleRate; i += SamplesPerFrame ) {
+        FFSound_setPts( snd, i );
         FFWriter_encodeSound( writer, snd );
         assert( !FFWriter_checkError(writer) );
     }
-
-    FFImage_delete( &img );
     FFSound_delete( &snd );
 
     FFWriter_flush( writer );

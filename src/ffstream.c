@@ -198,6 +198,12 @@ int FFStream_getSampleRate ( FFStream* this )
     NULL_GUARD(this->codec) 0;
     return this->codec->sample_rate;
 }
+long FFStream_getFrameSize ( FFStream* this )
+{
+    NULL_GUARD(this) 0;
+    NULL_GUARD(this->codec) 0;
+    return this->codec->frame_size;
+}
 
 FFError FFStream_sendPacket ( FFStream* this, AVPacket* packet )
 {
@@ -311,7 +317,7 @@ FFError FFStream_setupVideoEncoder ( FFStream* this, int w, int h, FFRational tb
     }
     return EASYFF_NOERROR;
 }
-FFError FFStream_setupAudioEncoder ( FFStream* this, int chnl, int rate, FFRational tb )
+FFError FFStream_setupAudioEncoder ( FFStream* this, int chnl, int rate )
 {
     NULL_GUARD(this) 0;
     ILLEGAL_GUARD(this) 0;
@@ -325,11 +331,10 @@ FFError FFStream_setupAudioEncoder ( FFStream* this, int chnl, int rate, FFRatio
         THROW( EASYFF_ERROR_NO_CODEC );
     }
 
-    this->codec->sample_fmt    = FFStream_getCompatibleSampleFormat( this );
+    this->codec->sample_fmt     = FFStream_getCompatibleSampleFormat( this );
     this->codec->channel_layout = av_get_default_channel_layout( chnl );
+    this->codec->channels       = chnl;
     this->codec->sample_rate    = rate;
-    this->codec->time_base.num  = tb.num;
-    this->codec->time_base.den  = tb.den;
 
     if ( avcodec_open2( this->codec, this->codec->codec, NULL ) ) {
         THROW( EASYFF_ERROR_CREATE_CONTEXT );

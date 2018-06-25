@@ -44,9 +44,10 @@ long       FFStream_getStartTime  ( FFStream* );
 long       FFStream_getDuration   ( FFStream* );
 long       FFStream_getFrameCount ( FFStream* );
 
-int FFStream_getSampleRate ( FFStream* );
+int  FFStream_getSampleRate ( FFStream* );
+long FFStream_getFrameSize  ( FFStream* );
 
 FFError FFStream_setupVideoEncoder ( FFStream*, int, int, FFRational );
-FFError FFStream_setupAudioEncoder ( FFStream*, int, int, FFRational );
+FFError FFStream_setupAudioEncoder ( FFStream*, int, int );
 
 #endif
