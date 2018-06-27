@@ -50,8 +50,8 @@ extern(C)
 
     struct FFStream;
     FFError FFStream_checkError        ( FFStream* );
-    FFError FFStream_setupVideoEncoder ( FFStream*, int, int, FFRational );
-    FFError FFStream_setupAudioEncoder ( FFStream*, int, int );
+    FFError FFStream_setupVideoEncoder ( FFStream*, int, int, FFRational, FFOption* );
+    FFError FFStream_setupAudioEncoder ( FFStream*, int, int, FFOption* );
     FFError FFStream_getFrameSize      ( FFStream* );
     FFRational FFStream_getTimebase      ( FFStream* );
 
@@ -66,6 +66,11 @@ extern(C)
     FFError   FFWriter_encodeImage       ( FFWriter*, FFImage* );
     FFError   FFWriter_encodeSound       ( FFWriter*, FFSound* );
     FFError   FFWriter_flush             ( FFWriter* );
+
+    struct FFOption;
+    FFOption* FFOption_new    ();
+    void      FFOption_delete ( FFOption** );
+    FFError   FFOption_set    ( FFOption*, const(char)*, const(char)* );
 }
 
 void main ()
@@ -79,14 +84,18 @@ void main ()
     auto writer = FFWriter_new( OutputPath );
     assert( writer && !FFWriter_checkError(writer) );
 
+    auto option = FFOption_new();
+    FFOption_set( option, "b", "50k" );
+
     auto video = FFWriter_createVideoStream( writer );
     assert( video && !FFStream_checkError(video) );
-    FFStream_setupVideoEncoder( video, VideoW, VideoH, FFRational(1,FPS) );
+    FFStream_setupVideoEncoder( video, VideoW, VideoH, FFRational(1,FPS), option );
     assert( !FFStream_checkError(video) );
+    FFOption_delete( &option );
 
     auto audio = FFWriter_createAudioStream( writer );
     assert( audio && !FFStream_checkError(audio) );
-    FFStream_setupAudioEncoder( audio, Channels, SampleRate );
+    FFStream_setupAudioEncoder( audio, Channels, SampleRate, null );
     assert( !FFStream_checkError(audio) );
 
     FFMeta meta;

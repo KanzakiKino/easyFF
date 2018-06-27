@@ -8,6 +8,7 @@
 #include "fftypes.h"
 
 typedef struct FFStream FFStream;
+typedef struct FFOption FFOption;
 
 #ifdef EASYFF_PROTECTED
     enum AVPixelFormat;
@@ -47,7 +48,7 @@ long       FFStream_getFrameCount ( FFStream* );
 int  FFStream_getSampleRate ( FFStream* );
 long FFStream_getFrameSize  ( FFStream* );
 
-FFError FFStream_setupVideoEncoder ( FFStream*, int, int, FFRational );
-FFError FFStream_setupAudioEncoder ( FFStream*, int, int );
+FFError FFStream_setupVideoEncoder ( FFStream*, int, int, FFRational, FFOption* );
+FFError FFStream_setupAudioEncoder ( FFStream*, int, int, FFOption* );
 
 #endif

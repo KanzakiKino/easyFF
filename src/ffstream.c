@@ -3,6 +3,7 @@
 #define EASYFF_PROTECTED
 
 #include <ffstream.h>
+#include <ffoption.h>
 #include <util.h>
 
 #include <libavcodec/avcodec.h>
@@ -289,7 +290,7 @@ enum AVSampleFormat FFStream_getCompatibleSampleFormat ( FFStream* this )
     NULL_GUARD(this->codec->codec->sample_fmts) AV_SAMPLE_FMT_NONE;
     return this->codec->codec->sample_fmts[0];
 }
-FFError FFStream_setupVideoEncoder ( FFStream* this, int w, int h, FFRational tb )
+FFError FFStream_setupVideoEncoder ( FFStream* this, int w, int h, FFRational tb, FFOption* opts )
 {
     NULL_GUARD(this) 0;
     ILLEGAL_GUARD(this) 0;
@@ -309,7 +310,8 @@ FFError FFStream_setupVideoEncoder ( FFStream* this, int w, int h, FFRational tb
     this->codec->time_base.num = tb.num;
     this->codec->time_base.den = tb.den;
 
-    if ( avcodec_open2( this->codec, this->codec->codec, NULL ) ) {
+    AVDictionary** options = FFOption_getAVDic( opts );
+    if ( avcodec_open2( this->codec, this->codec->codec, options ) ) {
         THROW( EASYFF_ERROR_CREATE_CONTEXT );
     }
     if ( avcodec_parameters_from_context( this->stream->codecpar, this->codec) ) {
@@ -317,7 +319,7 @@ FFError FFStream_setupVideoEncoder ( FFStream* this, int w, int h, FFRational tb
     }
     return EASYFF_NOERROR;
 }
-FFError FFStream_setupAudioEncoder ( FFStream* this, int chnl, int rate )
+FFError FFStream_setupAudioEncoder ( FFStream* this, int chnl, int rate, FFOption* opts )
 {
     NULL_GUARD(this) 0;
     ILLEGAL_GUARD(this) 0;
@@ -336,7 +338,8 @@ FFError FFStream_setupAudioEncoder ( FFStream* this, int chnl, int rate )
     this->codec->channels       = chnl;
     this->codec->sample_rate    = rate;
 
-    if ( avcodec_open2( this->codec, this->codec->codec, NULL ) ) {
+    AVDictionary** options = FFOption_getAVDic( opts );
+    if ( avcodec_open2( this->codec, this->codec->codec, options ) ) {
         THROW( EASYFF_ERROR_CREATE_CONTEXT );
     }
     if ( avcodec_parameters_from_context( this->stream->codecpar, this->codec) ) {
