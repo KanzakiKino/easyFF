@@ -40,4 +40,7 @@ FFImage* FFReader_convertFrameToImage ( FFReader* );
 // You need to delete the sound after using.
 FFSound* FFReader_convertFrameToSound ( FFReader*, int, int );
 
+// Seeks to the specified timestamp. Stream can be null.
+FFError FFReader_seek ( FFReader*, FFStream*, long );
+
 #endif

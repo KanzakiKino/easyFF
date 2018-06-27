@@ -19,6 +19,7 @@ struct FFReader
     FFError error;
 
     AVFormatContext* format;
+    long aheadOffsetByte;
 
     unsigned int streamCount;
     FFStream**   streams;
@@ -82,11 +83,12 @@ FFReader* FFReader_new ( const char* path )
     if ( !this ) {
         return NULL;
     }
-    this->error       = EASYFF_NOERROR;
-    this->format      = NULL;
-    this->streamCount = 0;
-    this->streams     = NULL;
-    this->frame       = av_frame_alloc();
+    this->error           = EASYFF_NOERROR;
+    this->format          = NULL;
+    this->aheadOffsetByte = 0;
+    this->streamCount     = 0;
+    this->streams         = NULL;
+    this->frame           = av_frame_alloc();
 
     if ( avformat_open_input( &this->format, path, NULL, NULL ) ) {
         this->error = EASYFF_ERROR_CREATE_CONTEXT;
@@ -98,6 +100,7 @@ FFReader* FFReader_new ( const char* path )
         this->error = ret;
         return this;
     }
+    this->aheadOffsetByte = this->format->pb->pos;
 
     return this;
 }
@@ -219,4 +222,20 @@ FFSound* FFReader_convertFrameToSound ( FFReader* this, int channels, int sample
     NULL_GUARD(this) NULL;
     ILLEGAL_GUARD(this) NULL;
     return FFSound_newFromAVFrame( this->frame, channels, sampleRate );
+}
+
+FFError FFReader_seek ( FFReader* this, FFStream* stream, long ts )
+{
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+
+    int stIndex = -1;
+    if ( stream ) {
+        stIndex = FFStream_getIndex( stream );
+    }
+
+    if ( av_seek_frame( this->format, stIndex, ts, AVSEEK_FLAG_BACKWARD ) < 0 ) {
+        return EASYFF_ERROR_INVALID_CONTEXT;
+    }
+    return EASYFF_NOERROR;
 }
