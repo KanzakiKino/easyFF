@@ -39,7 +39,8 @@ FFError FFSound_clear ( FFSound* this, int samples, int channels )
     this->channels = channels;
     return EASYFF_NOERROR;
 }
-FFError FFSound_copyAVFrame ( FFSound* this, AVFrame* frame )
+FFError FFSound_copyAVFrame ( FFSound* this, AVFrame* frame,
+       int dstSampleRate, int dstChannels )
 {
     NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
     ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
@@ -49,11 +50,12 @@ FFError FFSound_copyAVFrame ( FFSound* this, AVFrame* frame )
     }
 
     enum AVSampleFormat srcForm       = (enum AVSampleFormat)frame->format;
-    int64_t             srcChLayout   = frame->channel_layout;
-    int64_t             srcSampleRate = frame->sample_rate;
+    int                 srcChLayout   = frame->channel_layout;
+    int                 srcSampleRate = frame->sample_rate;
     enum AVSampleFormat dstForm       = AV_SAMPLE_FMT_FLT;
+    int                 dstChLayout   = av_get_default_channel_layout(dstChannels);
     SwrContext* swr = swr_alloc_set_opts( NULL,
-           dstForm, srcChLayout, srcSampleRate,
+           dstChLayout, dstForm, dstSampleRate,
            srcChLayout, srcForm, srcSampleRate, 0, NULL);
     if ( !swr || swr_init( swr ) ) {
         THROW( EASYFF_ERROR_CREATE_CONTEXT );
@@ -61,25 +63,24 @@ FFError FFSound_copyAVFrame ( FFSound* this, AVFrame* frame )
 
     int srcSamples = frame->nb_samples;
     int dstSamples = swr_get_out_samples( swr, srcSamples );
-    int dstChannels = av_get_channel_layout_nb_channels( srcChLayout );
     FFError ret = FFSound_clear( this, dstSamples, dstChannels );
     if ( ret != EASYFF_NOERROR ) {
         THROW( ret );
     }
+    this->pts        = frame->pts;
+    this->sampleRate = dstSampleRate;
 
     const uint8_t** srcData   = (const uint8_t**)frame->data;
     uint8_t*        dstData[] = {(uint8_t*)this->buffer,NULL};
     if ( swr_convert( swr, dstData, dstSamples, srcData, srcSamples ) < 0 ) {
         THROW( EASYFF_ERROR_INVALID_FRAME );
     }
-    this->pts        = frame->pts;
-    this->sampleRate = srcSampleRate;
 
     swr_free( &swr );
     return EASYFF_NOERROR;
 }
 
-FFSound* FFSound_newFromAVFrame ( AVFrame* frame )
+FFSound* FFSound_newFromAVFrame ( AVFrame* frame, int chnls, int rate )
 {
     NULL_GUARD(frame) NULL;
 
@@ -91,7 +92,7 @@ FFSound* FFSound_newFromAVFrame ( AVFrame* frame )
     this->sampleRate = 0;
     this->buffer     = NULL;
 
-    FFError ret = FFSound_copyAVFrame( this, frame );
+    FFError ret = FFSound_copyAVFrame( this, frame, chnls, rate );
     if ( ret != EASYFF_NOERROR ) {
         this->error = ret;
         return this;

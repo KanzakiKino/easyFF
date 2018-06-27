@@ -38,6 +38,6 @@ char FFReader_decode ( FFReader*, FFStream* );
 FFImage* FFReader_convertFrameToImage ( FFReader* );
 // Converts the decoded frame to sound.
 // You need to delete the sound after using.
-FFSound* FFReader_convertFrameToSound ( FFReader* );
+FFSound* FFReader_convertFrameToSound ( FFReader*, int, int );
 
 #endif

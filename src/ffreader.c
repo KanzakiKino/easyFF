@@ -214,9 +214,9 @@ FFImage* FFReader_convertFrameToImage ( FFReader* this )
     ILLEGAL_GUARD(this) NULL;
     return FFImage_newFromAVFrame( this->frame );
 }
-FFSound* FFReader_convertFrameToSound ( FFReader* this )
+FFSound* FFReader_convertFrameToSound ( FFReader* this, int channels, int sampleRate )
 {
     NULL_GUARD(this) NULL;
     ILLEGAL_GUARD(this) NULL;
-    return FFSound_newFromAVFrame( this->frame );
+    return FFSound_newFromAVFrame( this->frame, channels, sampleRate );
 }

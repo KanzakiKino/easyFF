@@ -12,7 +12,7 @@ typedef struct FFSound FFSound;
     enum AVSampleFormat;
     typedef struct AVFrame AVFrame;
 
-    FFSound* FFSound_newFromAVFrame ( AVFrame* );
+    FFSound* FFSound_newFromAVFrame ( AVFrame*, int, int );
 
     FFError FFSound_convertToAVFrame( FFSound*, enum AVSampleFormat, int, AVFrame* );
 #endif
