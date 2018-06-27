@@ -1,17 +1,13 @@
 easyFF
 ----
 
-easyFF is a wrapper library for FFmpeg.
-
-**This library is now developing.**
+easyFF is a wrapper library for FFmpeg.  
+This library was developed for using FFmpeg in the D programming language.  
+dlang version is [here](https://github.com/KanzakiKino/easyFF-d).
 
 ## Requirements
 
 - FFmpeg 4.0
-
-## Example
-
-You can see `/test.d`.
 
 ## Authors
 
