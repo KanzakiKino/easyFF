@@ -164,7 +164,7 @@ FFMeta FFReader_getMeta ( FFReader* this )
     NULL_GUARD(this->format) meta;
     NULL_GUARD(this->format->metadata) meta;
 
-    FFError ret = FFMeta_assignAVDic( &meta, this->format->metadata );
+    FFError ret = FFMeta_assignFromAVDic( &meta, this->format->metadata );
     if ( ret != EASYFF_NOERROR ) {
         this->error = ret;
         return meta;

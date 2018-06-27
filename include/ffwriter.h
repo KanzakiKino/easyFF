@@ -25,6 +25,9 @@ FFStream* FFWriter_createVideoStream ( FFWriter* );
 // Creates audio stream.
 FFStream* FFWriter_createAudioStream ( FFWriter* );
 
+// Set metadata.
+FFError FFWriter_setMeta ( FFWriter*, FFMeta* );
+
 // Writes a header.
 // You can't create streams anymore after calling this method.
 FFError FFWriter_writeHeader ( FFWriter* );

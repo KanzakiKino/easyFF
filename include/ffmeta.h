@@ -28,7 +28,8 @@ typedef struct {
 }
 
 #ifdef EASYFF_PROTECTED
-    FFError FFMeta_assignAVDic ( FFMeta* meta, const AVDictionary* );
+    FFError FFMeta_assignFromAVDic ( FFMeta* meta, const AVDictionary* );
+    FFError FFMeta_assignToAVDic ( FFMeta* meta, AVDictionary** );
 #endif
 
 #endif

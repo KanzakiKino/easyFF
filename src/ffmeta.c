@@ -20,8 +20,13 @@ const char* FFMeta_getValue ( const AVDictionary* dic, const char* key )
         return NULL;
     }
 }
+void FFMeta_setValue ( AVDictionary** dic, const char* key, const char* val )
+{
+    NULL_GUARD(dic);
+    av_dict_set( dic, key, val, DICT_FLAG );
+}
 
-FFError FFMeta_assignAVDic ( FFMeta* meta, const AVDictionary* dic )
+FFError FFMeta_assignFromAVDic ( FFMeta* meta, const AVDictionary* dic )
 {
     NULL_GUARD( meta ) EASYFF_ERROR_NULL_POINTER;
 
@@ -37,5 +42,23 @@ FFError FFMeta_assignAVDic ( FFMeta* meta, const AVDictionary* dic )
     meta->genre       = FFMeta_getValue( dic, "genre" );
     meta->copyright   = FFMeta_getValue( dic, "copyright" );
     meta->description = FFMeta_getValue( dic, "description" );
+    return EASYFF_NOERROR;
+}
+FFError FFMeta_assignToAVDic ( FFMeta* meta, AVDictionary** dic )
+{
+    NULL_GUARD( meta ) EASYFF_ERROR_NULL_POINTER;
+
+    FFMeta_setValue( dic, "title", meta->title );
+    FFMeta_setValue( dic, "author", meta->author );
+    FFMeta_setValue( dic, "album_artist", meta->albumArtist );
+    FFMeta_setValue( dic, "album", meta->album );
+    FFMeta_setValue( dic, "grouping", meta->grouping );
+    FFMeta_setValue( dic, "composer", meta->composer );
+    FFMeta_setValue( dic, "year", meta->year );
+    FFMeta_setValue( dic, "track", meta->track );
+    FFMeta_setValue( dic, "comment", meta->comment );
+    FFMeta_setValue( dic, "genre", meta->genre );
+    FFMeta_setValue( dic, "copyright", meta->copyright );
+    FFMeta_setValue( dic, "description", meta->description );
     return EASYFF_NOERROR;
 }

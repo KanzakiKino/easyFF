@@ -4,6 +4,7 @@
 
 #include <ffwriter.h>
 #include <ffimage.h>
+#include <ffmeta.h>
 #include <ffsound.h>
 #include <ffstream.h>
 #include <util.h>
@@ -141,6 +142,18 @@ FFStream* FFWriter_createAudioStream ( FFWriter* this )
 
     this->audio = FFWriter_createStream( this, this->format->oformat->audio_codec );
     return this->audio;
+}
+
+FFError FFWriter_setMeta ( FFWriter* this, FFMeta* meta )
+{
+    NULL_GUARD(this) EASYFF_ERROR_NULL_POINTER;
+    ILLEGAL_GUARD(this) EASYFF_ERROR_ILLEGAL_OBJECT;
+
+    if ( this->wroteHeader ) {
+        THROW( EASYFF_ERROR_INVALID_CONTEXT );
+    }
+    FFMeta_assignToAVDic( meta, &this->format->metadata );
+    return EASYFF_NOERROR;
 }
 
 FFError FFWriter_writeHeader ( FFWriter* this )

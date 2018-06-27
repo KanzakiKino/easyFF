@@ -19,6 +19,21 @@ extern(C)
         int num, den;
     }
 
+    struct FFMeta {
+        const(char)* title;
+        const(char)* author;
+        const(char)* albumArtist;
+        const(char)* album;
+        const(char)* grouping;
+        const(char)* composer;
+        const(char)* year;
+        const(char)* track;
+        const(char)* comment;
+        const(char)* genre;
+        const(char)* copyright;
+        const(char)* description;
+    }
+
     struct FFImage;
     FFImage* FFImage_new        ( int, int, long );
     void     FFImage_delete     ( FFImage** );
@@ -46,6 +61,7 @@ extern(C)
     FFError   FFWriter_checkError        ( FFWriter* );
     FFStream* FFWriter_createVideoStream ( FFWriter* );
     FFStream* FFWriter_createAudioStream ( FFWriter* );
+    FFError   FFWriter_setMeta           ( FFWriter*, FFMeta* );
     FFError   FFWriter_writeHeader       ( FFWriter* );
     FFError   FFWriter_encodeImage       ( FFWriter*, FFImage* );
     FFError   FFWriter_encodeSound       ( FFWriter*, FFSound* );
@@ -72,6 +88,10 @@ void main ()
     assert( audio && !FFStream_checkError(audio) );
     FFStream_setupAudioEncoder( audio, Channels, SampleRate );
     assert( !FFStream_checkError(audio) );
+
+    FFMeta meta;
+    meta.album = "test";
+    FFWriter_setMeta( writer, &meta );
 
     FFWriter_writeHeader( writer );
     assert( !FFWriter_checkError(writer) );
