@@ -71,10 +71,14 @@ extern(C)
     FFOption* FFOption_new    ();
     void      FFOption_delete ( FFOption** );
     FFError   FFOption_set    ( FFOption*, const(char)*, const(char)* );
+
+    char FF_hasVersionIntegrity ();
 }
 
 void main ()
 {
+    assert( FF_hasVersionIntegrity() );
+
     enum OutputPath = "test.mp4";
     enum VideoW = 1024, VideoH = 768;
     enum FPS = 30, DurationSec = 10;
